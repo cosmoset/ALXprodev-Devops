@@ -1,0 +1,34 @@
+#!/bin/bash
+
+POKEMONS=(bulbasaur ivysaur venusaur charmander charmeleon)
+OUTPUT_DIR="pokemon_data"
+mkdir -p "$OUTPUT_DIR"
+
+fetch_pokemon() {
+    NAME=$1
+    echo "Fetching data for $NAME..."
+    curl -s "https://pokeapi.co/api/v2/pokemon/$NAME" -o "$OUTPUT_DIR/$NAME.json"
+    if [ $? -eq 0 ]; then
+        echo "Saved data to $OUTPUT_DIR/$NAME.json ✅"
+    else
+        echo "❌ Failed to fetch data for $NAME"
+    fi
+}
+
+# Run fetches in background
+for NAME in "${POKEMONS[@]}"; do
+    fetch_pokemon "$NAME" &
+done
+
+# List running jobs
+echo "🛠️ Running jobs:"
+jobs
+
+# Wait for all background processes
+wait
+echo "✅ All parallel fetches completed."
+
+# Optionally: Kill leftover jobs (demonstrating 'kill')
+for job in $(jobs -p); do
+    kill "$job" 2>/dev/null
+done
