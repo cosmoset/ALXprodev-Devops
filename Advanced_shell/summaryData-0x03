@@ -2,28 +2,28 @@
 
 OUTPUT_FILE="summary.csv"
 
-# Prepare CSV headers
+# 1. Generate CSV header
 echo "Name,Height (m),Weight (kg)" > "$OUTPUT_FILE"
 
-# Read all JSON files, extract data, and build CSV
+# 2. Process JSON files and append to CSV
 for file in *.json; do
     name=$(jq -r '.name' "$file")
     height=$(jq -r '.height' "$file")
     weight=$(jq -r '.weight' "$file")
+    # Convert height (dm→m) and weight (hg→kg) using awk
     height_m=$(awk "BEGIN {printf \"%.1f\", $height / 10}")
     weight_kg=$(awk "BEGIN {printf \"%.1f\", $weight / 10}")
     echo "$name,$height_m,$weight_kg" >> "$OUTPUT_FILE"
 done
 
-# Calculate and display averages directly
+# 3. Calculate averages using ONLY awk (no temp files)
 awk -F, '
-NR == 1 { next }  # Skip header row
-{
+NR > 1 {  # Skip header row
     height_sum += $2
     weight_sum += $3
     count++
 }
 END {
-    printf "\nAverage Height: %.2f m\n", height_sum/count
-    printf "Average Weight: %.2f kg\n", weight_sum/count
+    print "Average Height (m): " (height_sum / count)
+    print "Average Weight (kg): " (weight_sum / count)
 }' "$OUTPUT_FILE"
