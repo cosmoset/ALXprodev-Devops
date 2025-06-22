@@ -1,12 +1,11 @@
 #!/bin/bash
 
 OUTPUT_FILE="summary.csv"
-TEMP_FILE="temp.txt"
 
 # Prepare CSV headers
 echo "Name,Height (m),Weight (kg)" > "$OUTPUT_FILE"
 
-# Read all JSON files and extract data
+# Read all JSON files, extract data, and build CSV
 for file in *.json; do
     name=$(jq -r '.name' "$file")
     height=$(jq -r '.height' "$file")
@@ -16,8 +15,15 @@ for file in *.json; do
     echo "$name,$height_m,$weight_kg" >> "$OUTPUT_FILE"
 done
 
-# Calculate averages
-awk -F, 'NR > 1 {height+=$2; weight+=$3; count++} 
-         END {print "Average Height (m): " height/count "\nAverage Weight (kg): " weight/count}' "$OUTPUT_FILE" > "$TEMP_FILE"
-
-cat "$TEMP_FILE"
+# Calculate and display averages directly
+awk -F, '
+NR == 1 { next }  # Skip header row
+{
+    height_sum += $2
+    weight_sum += $3
+    count++
+}
+END {
+    printf "\nAverage Height: %.2f m\n", height_sum/count
+    printf "Average Weight: %.2f kg\n", weight_sum/count
+}' "$OUTPUT_FILE"
